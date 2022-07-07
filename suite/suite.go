@@ -186,7 +186,7 @@ func Run(t *testing.T, suite TestingSuite) {
 
 					r := recover()
 
-					stats.end(method.Name, !t.Failed() && r == nil)
+					stats.end(method.Name, !t.Failed() && r == nil, t.Skipped())
 
 					if afterTestSuite, ok := suite.(AfterTest); ok {
 						afterTestSuite.AfterTest(suiteName, method.Name)
