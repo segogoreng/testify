@@ -814,9 +814,9 @@ func TestSuiteSignatureValidation(t *testing.T) {
 	assert.True(t, suiteTester.toreDown, "TearDownSuite should have been executed")
 }
 
-// SuiteBeforeTestSkipTester tests that when BeforeTest calls Skip(),
+// suiteBeforeTestSkipTester tests that when BeforeTest calls Skip(),
 // the AfterTest and TearDownTest hooks are not executed
-type SuiteBeforeTestSkipTester struct {
+type suiteBeforeTestSkipTester struct {
 	Suite
 	beforeTestCalled bool
 	testCalled       bool
@@ -824,25 +824,25 @@ type SuiteBeforeTestSkipTester struct {
 	tearDownCalled   bool
 }
 
-func (s *SuiteBeforeTestSkipTester) BeforeTest(suiteName, testName string) {
+func (s *suiteBeforeTestSkipTester) BeforeTest(suiteName, testName string) {
 	s.beforeTestCalled = true
 	s.T().Skip("Skipping in BeforeTest")
 }
 
-func (s *SuiteBeforeTestSkipTester) TestShouldBeSkipped() {
+func (s *suiteBeforeTestSkipTester) TestShouldBeSkipped() {
 	s.testCalled = true
 }
 
-func (s *SuiteBeforeTestSkipTester) AfterTest(suiteName, testName string) {
+func (s *suiteBeforeTestSkipTester) AfterTest(suiteName, testName string) {
 	s.afterTestCalled = true
 }
 
-func (s *SuiteBeforeTestSkipTester) TearDownTest() {
+func (s *suiteBeforeTestSkipTester) TearDownTest() {
 	s.tearDownCalled = true
 }
 
 func TestBeforeTestSkip(t *testing.T) {
-	suiteTester := new(SuiteBeforeTestSkipTester)
+	suiteTester := new(suiteBeforeTestSkipTester)
 
 	ok := testing.RunTests(allTestsFilter, []testing.InternalTest{
 		{
@@ -861,6 +861,9 @@ func TestBeforeTestSkip(t *testing.T) {
 	assert.False(t, suiteTester.tearDownCalled, "TearDownTest should NOT have been called when test is skipped")
 }
 
+// setupSuiteSkippingSuite tests that when SetupSuite calls Skip(),
+// the SetupTest, BeforeTest, Test, AfterTest, and TearDownTest
+// hooks are not executed.
 type setupSuiteSkippingSuite struct {
 	Suite
 	setupSuiteCalled    bool
