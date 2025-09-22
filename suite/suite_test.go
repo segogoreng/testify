@@ -813,3 +813,112 @@ func TestSuiteSignatureValidation(t *testing.T) {
 	assert.True(t, suiteTester.setUp, "SetupSuite should have been executed")
 	assert.True(t, suiteTester.toreDown, "TearDownSuite should have been executed")
 }
+
+// SuiteBeforeTestSkipTester tests that when BeforeTest calls Skip(),
+// the AfterTest and TearDownTest hooks are not executed
+type SuiteBeforeTestSkipTester struct {
+	Suite
+	beforeTestCalled bool
+	testCalled       bool
+	afterTestCalled  bool
+	tearDownCalled   bool
+}
+
+func (s *SuiteBeforeTestSkipTester) BeforeTest(suiteName, testName string) {
+	s.beforeTestCalled = true
+	s.T().Skip("Skipping in BeforeTest")
+}
+
+func (s *SuiteBeforeTestSkipTester) TestShouldBeSkipped() {
+	s.testCalled = true
+}
+
+func (s *SuiteBeforeTestSkipTester) AfterTest(suiteName, testName string) {
+	s.afterTestCalled = true
+}
+
+func (s *SuiteBeforeTestSkipTester) TearDownTest() {
+	s.tearDownCalled = true
+}
+
+func TestBeforeTestSkip(t *testing.T) {
+	suiteTester := new(SuiteBeforeTestSkipTester)
+
+	ok := testing.RunTests(allTestsFilter, []testing.InternalTest{
+		{
+			Name: "beforetest skip",
+			F: func(t *testing.T) {
+				Run(t, suiteTester)
+			},
+		},
+	})
+
+	require.True(t, ok, "Suite should pass even when test is skipped")
+
+	assert.True(t, suiteTester.beforeTestCalled, "BeforeTest should have been called")
+	assert.False(t, suiteTester.testCalled, "Test method should NOT have been called when skipped in BeforeTest")
+	assert.False(t, suiteTester.afterTestCalled, "AfterTest should NOT have been called when test is skipped")
+	assert.False(t, suiteTester.tearDownCalled, "TearDownTest should NOT have been called when test is skipped")
+}
+
+type setupSuiteSkippingSuite struct {
+	Suite
+	setupSuiteCalled    bool
+	setupTestCalled     bool
+	beforeTestCalled    bool
+	testCalled          bool
+	afterTestCalled     bool
+	tearDownTestCalled  bool
+	tearDownSuiteCalled bool
+}
+
+func (s *setupSuiteSkippingSuite) SetupSuite() {
+	s.setupSuiteCalled = true
+	s.T().Skip("Skipping in SetupSuite")
+}
+
+func (s *setupSuiteSkippingSuite) SetupTest() {
+	s.setupTestCalled = true
+}
+
+func (s *setupSuiteSkippingSuite) BeforeTest(suiteName, testName string) {
+	s.beforeTestCalled = true
+}
+
+func (s *setupSuiteSkippingSuite) TestSomeTest() {
+	s.testCalled = true
+}
+
+func (s *setupSuiteSkippingSuite) AfterTest(suiteName, testName string) {
+	s.afterTestCalled = true
+}
+
+func (s *setupSuiteSkippingSuite) TearDownTest() {
+	s.tearDownTestCalled = true
+}
+
+func (s *setupSuiteSkippingSuite) TearDownSuite() {
+	s.tearDownSuiteCalled = true
+}
+
+func TestSkipInSetupSuite(t *testing.T) {
+	suiteTester := new(setupSuiteSkippingSuite)
+	ok := testing.RunTests(allTestsFilter, []testing.InternalTest{
+		{
+			Name: t.Name() + "/SkipInSetupSuite",
+			F: func(t *testing.T) {
+				Run(t, suiteTester)
+			},
+		},
+	})
+
+	require.True(t, ok, "Suite should pass when skipped in SetupSuite")
+
+	assert.True(t, suiteTester.setupSuiteCalled, "SetupSuite should have been called")
+	assert.False(t, suiteTester.setupTestCalled, "SetupTest should NOT have been called when skipped in SetupSuite")
+	assert.False(t, suiteTester.beforeTestCalled, "BeforeTest should NOT have been called when skipped in SetupSuite")
+	assert.False(t, suiteTester.testCalled, "Test method should NOT have been called when skipped in SetupSuite")
+	assert.False(t, suiteTester.afterTestCalled, "AfterTest should NOT have been called when skipped in SetupSuite")
+	assert.False(t, suiteTester.tearDownTestCalled, "TearDownTest should NOT have been called when skipped in SetupSuite")
+	assert.False(t, suiteTester.tearDownSuiteCalled, "TearDownSuite should NOT have been called when skipped in SetupSuite")
+}
