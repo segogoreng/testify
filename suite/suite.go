@@ -188,12 +188,14 @@ func Run(t *testing.T, suite TestingSuite) {
 
 					stats.end(method.Name, !t.Failed() && r == nil)
 
-					if afterTestSuite, ok := suite.(AfterTest); ok {
-						afterTestSuite.AfterTest(suiteName, method.Name)
-					}
+					if !t.Skipped() {
+						if afterTestSuite, ok := suite.(AfterTest); ok {
+							afterTestSuite.AfterTest(suiteName, method.Name)
+						}
 
-					if tearDownTestSuite, ok := suite.(TearDownTestSuite); ok {
-						tearDownTestSuite.TearDownTest()
+						if tearDownTestSuite, ok := suite.(TearDownTestSuite); ok {
+							tearDownTestSuite.TearDownTest()
+						}
 					}
 
 					suite.SetT(parentT)
